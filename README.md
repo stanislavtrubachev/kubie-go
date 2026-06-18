@@ -1,4 +1,4 @@
-# Kubie-go
+git # Kubie-go
 
 ## Motivation
 
@@ -47,6 +47,22 @@ To uninstall:
 ```sh
 curl -fsSL https://raw.githubusercontent.com/stanislavtrubachev/kubie-go/main/uninstall.sh | sh
 ```
+
+### macOS: Trusting the binary (Gatekeeper)
+
+On newer versions of macOS, Gatekeeper may block the downloaded binary with the message **"cannot be opened because the developer cannot be verified"**. To allow it, run:
+
+```sh
+xattr -d com.apple.quarantine /usr/local/bin/kubie-go
+```
+
+If the binary is also installed as the `kubie` alias, apply the same command to it:
+
+```sh
+xattr -d com.apple.quarantine /usr/local/bin/kubie
+```
+
+After that the binary will start without any security warnings.
 
 ### Homebrew (macOS)
 
