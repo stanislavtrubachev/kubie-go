@@ -1,0 +1,57 @@
+version: 2
+
+project_name: kubie-go
+
+before:
+  hooks:
+    - sh -c "cd src && go mod tidy"
+
+builds:
+  - main: .
+    dir: src
+    binary: kubie-go
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    files:
+      - completion/**
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+
+brews:
+  - name: kubie-go
+    repository:
+      owner: stanislavtrubachev
+      name: homebrew-kubie-go
+      token: "{{ .Env.HOMEBREW_KUBIE_GO_GITHUB_TOKEN }}"
+    homepage: "https://github.com/stanislavtrubachev/kubie-go"
+    description: "Kubernetes context and namespace manager written in Go"
+    license: MIT
+    install: |
+      bin.install "kubie-go"
+      bin.install_symlink bin/"kubie-go" => "kubie"
+      zsh_completion.install "completion/kubie.zsh" => "_kubie"
+      bash_completion.install "completion/kubie.bash"
+      fish_completion.install "completion/kubie.fish"
+    test: |
+      assert_match "Usage", shell_output("#{bin}/kubie-go 2>&1", 1)
