@@ -156,7 +156,6 @@ func Context(settings *kubie.Settings, contextName *string, namespaceName *strin
 		case SelectResultSelected:
 			name = v.Value
 		default:
-			// Пользователь отменил или вывел список – завершаем
 			return nil
 		}
 	}
