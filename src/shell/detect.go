@@ -101,7 +101,6 @@ func CommandOf(pid string) (string, error) {
 
 // ParseCommand extracts the binary file name from the command line (removes the path, leading hyphens, ending digits, and dots.).
 func ParseCommand(cmd string) string {
-	// Найти первый пробел
 	idx := strings.Index(cmd, " ")
 	if idx == -1 {
 		idx = len(cmd)

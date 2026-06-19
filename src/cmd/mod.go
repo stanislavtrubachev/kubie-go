@@ -34,7 +34,6 @@ func (SelectResultSelected) isSelectResult() {}
 
 // SelectOrListContext selects the context interactively (via fzf) or displays a list
 func SelectOrListContext(fzf *kubie.Fzf, installed *kubie.Installed) (SelectResult, error) {
-	// Сортируем контексты по имени
 	sort.Slice(installed.Contexts, func(i, j int) bool {
 		return installed.Contexts[i].Item.Name < installed.Contexts[j].Item.Name
 	})
@@ -108,7 +107,6 @@ func SelectOrListNamespace(fzf *kubie.Fzf, namespaces []string) (SelectResult, e
 		}
 		return SelectResultCancelled{}, nil
 	} else {
-		// Не терминал: выводим список
 		for _, name := range ns {
 			fmt.Println(name)
 		}

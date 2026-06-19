@@ -104,8 +104,7 @@ add-zsh-hook preexec __kubie_cmd_pre_exec__
 	if _, err := writer.WriteString(rcContent); err != nil {
 		return fmt.Errorf("failed to write rc content: %w", err)
 	}
-
-	// Добавляем секцию промпта, если не отключён
+	
 	if !info.Settings.Prompt.Disable {
 		promptSection := fmt.Sprintf(`
 # Activate prompt substitution.

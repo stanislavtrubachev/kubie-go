@@ -122,13 +122,11 @@ func (inst *Installed) FindClusterByName(name string, source string) *Sourced[Na
 // FindUserByName searches for a user by name and source path,
 // First it searches for an exact match by name and source, then only by name.
 func (inst *Installed) FindUserByName(name string, source string) *Sourced[NamedUser] {
-	// Первый проход: точное совпадение имени и источника
 	for i := range inst.Users {
 		if inst.Users[i].Item.Name == name && inst.Users[i].Source == source {
 			return &inst.Users[i]
 		}
 	}
-	// Второй проход: совпадение только по имени
 	for i := range inst.Users {
 		if inst.Users[i].Item.Name == name {
 			return &inst.Users[i]
@@ -214,7 +212,6 @@ func (inst *Installed) GetContextsMatching(pattern string, allowMultipleContextP
 // DeleteContext deletes the context by name from all involved kubeconfig files.
 // If the file becomes empty after deletion, it is deleted completely.
 func (inst *Installed) DeleteContext(name string) error {
-	// 1. Ищем контекст по имени
 	ctx := inst.FindContextByName(name)
 	if ctx == nil {
 		return fmt.Errorf("context not found")
@@ -296,7 +293,6 @@ func (inst *Installed) makePathAbsolute(mapping map[string]interface{}, key stri
 // MakeKubeconfigForContext creates a new KubeConfig containing only the specified context,
 // (cluster, user, with absolute paths to the certificate files)
 func (inst *Installed) MakeKubeconfigForContext(contextName string, namespaceName *string) (*KubeConfig, error) {
-	// 1. Найти контекст
 	var ctx Sourced[NamedContext]
 	found := false
 	for _, c := range inst.Contexts {
@@ -336,7 +332,7 @@ func (inst *Installed) MakeKubeconfigForContext(contextName string, namespaceNam
 
 	inst.makePathAbsolute(namedUser.User, "client-certificate", kubeconfigDir)
 	inst.makePathAbsolute(namedUser.User, "client-key", kubeconfigDir)
-	
+
 	current := contextName
 	kc := KubeConfig{
 		Clusters:       []NamedCluster{namedCluster},

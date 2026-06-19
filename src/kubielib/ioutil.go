@@ -39,7 +39,6 @@ func WriteJson[T any](path string, obj *T) error {
 		return err
 	}
 
-	// Создаём файл
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -76,14 +75,12 @@ func ReadYaml[T any](path string) (T, error) {
 	return obj, nil
 }
 
-// WriteYaml записывает объект в файл в формате YAML, создавая при необходимости родительские директории.
+// WriteYaml writes the object to a file in YAML format, creating parent directories if necessary.
 func WriteYaml[T any](path string, obj *T) error {
-	// Создаём родительскую директорию, если её нет
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
 
-	// Создаём файл
 	file, err := os.Create(path)
 	if err != nil {
 		return err
@@ -102,10 +99,11 @@ func WriteYaml[T any](path string, obj *T) error {
 	return nil
 }
 
-// file_lock выполняет функцию scope внутри файловой блокировки.
-// Блокировка захватывается исключительно на файле path.
-// При панике внутри scope блокировка снимается, паника пробрасывается дальше.
-func file_lock[T any](path string, scope func() (T, error)) (T, error) {
+// FileLock performs the scope function inside the file lock.
+// The lock is captured exclusively on the path file.
+// If there is a panic inside the scope, the lock is lifted and the panic is pushed on.
+// Deprecated: rewrite, not use now
+func FileLock[T any](path string, scope func() (T, error)) (T, error) {
 	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
 		var zero T

@@ -60,7 +60,7 @@ func (s *Session) Save(path string) error {
 	return os.WriteFile(sessionPath, data, 0644)
 }
 
-// AddHistoryEntry добавляет новую запись в историю сессии.
+// AddHistoryEntry adds a new entry to the session history
 func (s *Session) AddHistoryEntry(context string, namespace *string) {
 	entry := HistoryEntry{
 		Context: context,
@@ -113,11 +113,12 @@ func (s *Session) GetLastNamespace() *string {
 	current := s.History[len(s.History)-1]
 	for i := len(s.History) - 2; i >= 0; i-- {
 		entry := s.History[i]
-		// Если контекст отличается от текущего, прерываем поиск и возвращаем nil
+		// If the context differs from the current one, we interrupt the search.
 		if current.Context != entry.Context {
 			return nil
 		}
-		// Проверяем, отличается ли неймспейс
+
+		// Checking if the namespace is different
 		if (current.Namespace == nil && entry.Namespace != nil) ||
 			(current.Namespace != nil && entry.Namespace == nil) ||
 			(current.Namespace != nil && entry.Namespace != nil && *current.Namespace != *entry.Namespace) {

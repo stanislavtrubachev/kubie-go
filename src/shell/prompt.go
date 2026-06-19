@@ -82,8 +82,8 @@ func (c Color[D]) endColor() string {
 	return c.isolate(seq)
 }
 
-// String реализует fmt.Stringer для Color, возвращая цветную строку.
-// Формат: [цвет] + содержимое + [сброс цвета], с учётом особенностей оболочки.
+// String implements fmt.Stringer for Color, returning a colored string.
+// Format: [color] + content + [color reset], taking into account the shell features.
 func (c Color[D]) String() string {
 	return c.startColor(c.Color) + fmt.Sprint(c.Content) + c.endColor()
 }

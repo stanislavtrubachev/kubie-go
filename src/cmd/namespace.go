@@ -97,7 +97,6 @@ func Namespace(settings *kubie.Settings, namespaceName *string, recursive bool, 
 						case SelectResultSelected:
 							actualNs = &v.Value
 						default:
-							// Отмена или вывод списка – завершаем без изменений
 							return nil
 						}
 					}

@@ -18,7 +18,6 @@ type ShellSpawnInfo struct {
 // SpawnShellBash launches a new bash shell with the passed parameters.
 // Creates a temporary rc file with the settings, executes it and when exiting performs a stop hook, if specified.
 func SpawnShellBash(info *ShellSpawnInfo) error {
-	// 1. Создаём временный rc-файл
 	tempRcFile, err := os.CreateTemp("", "kubie-bashrc-*.bash")
 	if err != nil {
 		return fmt.Errorf("failed to create temp rc file: %w", err)

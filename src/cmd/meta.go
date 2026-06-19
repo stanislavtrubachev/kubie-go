@@ -64,7 +64,7 @@ func determineShell(command GenerateCompletionCommand) shell.ShellKind {
 	}
 	fmt.Fprintln(os.Stderr, "Could not determine shell from environment. Please specify the shell.")
 	os.Exit(1)
-	return "" // никогда не выполняется
+	return ""
 }
 
 // shellFromEnv returns the shell type based on the SHELL environment variable
