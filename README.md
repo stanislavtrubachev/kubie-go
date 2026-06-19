@@ -4,10 +4,10 @@
 
 * [Motivation](#motivation)
 * [Solution](#solution)
-* [New feature](#new%20feature)
+* [New feature](#new-feature)
 * [Installation](#installation)
 * [Auto-completion](#auto-completion)
-* [Advanced info](#advanced%20info)
+* [Advanced info](#advanced-info)
 
 ## Motivation
 
