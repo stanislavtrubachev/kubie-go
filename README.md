@@ -1,5 +1,9 @@
 # Kubie-go
 
+<p align="center">
+  <img src="./assets/image_mascot_400x450.png" alt="Mascot Harold" width="400"/>
+</p>
+
 [![License: Zlib](https://img.shields.io/badge/License-Zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 
 ## Motivation
