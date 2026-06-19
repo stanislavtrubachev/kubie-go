@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stanislavtrubacev/kubie-go/kubielib"
+	kubie "github.com/stanislavtrubacev/kubie-go/kubielib"
 	"github.com/stanislavtrubacev/kubie-go/shell"
 )
 
@@ -116,7 +116,6 @@ func Namespace(settings *kubie.Settings, namespaceName *string, recursive bool, 
 		case SelectResultSelected:
 			actualNs = &v.Value
 		default:
-			// Пользователь отменил или вывел список – завершаем
 			return nil
 		}
 	}
