@@ -179,13 +179,14 @@ func DefaultHooks() Hooks {
 }
 
 type Settings struct {
-	Shell         *string  `yaml:"shell"`
-	DefaultEditor *string  `yaml:"default_editor"`
-	Configs       Configs  `yaml:"configs"`
-	Prompt        Prompt   `yaml:"prompt"`
-	Behavior      Behavior `yaml:"behavior"`
-	Hooks         Hooks    `yaml:"hooks"`
-	Fzf           Fzf      `yaml:"fzf"`
+	Shell         *string           `yaml:"shell"`
+	DefaultEditor *string           `yaml:"default_editor"`
+	Configs       Configs           `yaml:"configs"`
+	Prompt        Prompt            `yaml:"prompt"`
+	Behavior      Behavior          `yaml:"behavior"`
+	Hooks         Hooks             `yaml:"hooks"`
+	Fzf           Fzf               `yaml:"fzf"`
+	Aliases       map[string]string `yaml:"aliases"`
 }
 
 func DefaultSettings() Settings {
@@ -195,6 +196,7 @@ func DefaultSettings() Settings {
 		Behavior: DefaultBehavior(),
 		Hooks:    DefaultHooks(),
 		Fzf:      DefaultFzf(),
+		Aliases:  map[string]string{},
 	}
 }
 

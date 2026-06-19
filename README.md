@@ -2,6 +2,13 @@
 
 [![License: Zlib](https://img.shields.io/badge/License-Zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 
+* [Motivation](#motivation)
+* [Solution](#solution)
+* [New feature](#new%20feature)
+* [Installation](#installation)
+* [Auto-completion](#auto-completion)
+* [Advanced info](#advanced%20info)
+
 ## Motivation
 
 Imagine managing multiple clusters (`dev`, `test`, and `production`). You switch between them throughout the day using kubectl, kubectx or kubens. The issue? These utilities modify the global Kubernetes context for your entire system. Every terminal window you have open shares the exact same cluster view.
@@ -26,6 +33,30 @@ This creates a risky workflow:
 - Load contexts from **multiple** configuration files* (for example, keep separate files for each cloud provider or environment).
 
 This project is an offshoot from the original [kubie](https://github.com/kubie-org/kubie ). Since work with the source code repository has been [suspended](https://github.com/kubie-org/kubie/issues/385 ), I didn't want to lose such a handy tool. So I decided to do the maintenance myself and rewrite it in Go (*and maybe bring in something new*). It is a language that is ideal for DevOps engineers.
+
+## New feature
+
+This section describes the new features implemented in this fork that are not present in the original version.
+
+### Context Aliases
+
+If your kubeconfig contains long, auto-generated context names, you can define short aliases that will be displayed instead.
+
+Add an `aliases` section to `~/.kube/kubie.yaml`:
+
+```yaml
+aliases:
+  arn:aws:eks:eu-west-1:123456789:cluster/production: prod
+  arn:aws:eks:eu-west-1:123456789:cluster/staging: staging
+  gke_my-project_europe-west1-b_dev-cluster: dev
+```
+- The shell prompt shows the alias: `[prod|default]` instead of the full ARN.
+- `kubie info ctx` returns the alias.
+- The interactive selector shows both: `arn:aws:eks:...(prod)` — so you can still search by the original name.
+- `kubie exec` headers display the alias.
+- Internally, kubie-go always uses the original context name — switching, kubeconfig files, and all other operations are unaffected.
+
+> Aliases are display-only. When passing a context name directly (e.g. `kubie ctx <name>`), use the original name from your kubeconfig.
 
 ## How it works
 

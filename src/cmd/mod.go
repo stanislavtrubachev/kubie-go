@@ -32,22 +32,23 @@ type SelectResultSelected struct {
 
 func (SelectResultSelected) isSelectResult() {}
 
-// SelectOrListContext selects the context interactively (via fzf) or displays a list
-func SelectOrListContext(fzf *kubie.Fzf, installed *kubie.Installed) (SelectResult, error) {
+// SelectOrListContext selects the context interactively (via fzf) or displays a list.
+// If aliases are configured, list items are shown as "original(alias)".
+func SelectOrListContext(fzf *kubie.Fzf, settings *kubie.Settings, installed *kubie.Installed) (SelectResult, error) {
 	sort.Slice(installed.Contexts, func(i, j int) bool {
 		return installed.Contexts[i].Item.Name < installed.Contexts[j].Item.Name
 	})
 
 	contextNames := make([]string, len(installed.Contexts))
 	for i, c := range installed.Contexts {
-		contextNames[i] = c.Item.Name
+		contextNames[i] = kubie.FormatContextForSelector(settings, c.Item.Name)
 	}
 
 	if len(contextNames) == 0 {
 		return nil, fmt.Errorf("no contexts found")
 	}
 	if len(contextNames) == 1 {
-		return SelectResultSelected{Value: contextNames[0]}, nil
+		return SelectResultSelected{Value: kubie.ParseContextFromSelector(contextNames[0])}, nil
 	}
 
 	if term.IsTerminal(int(os.Stdout.Fd())) {
@@ -61,7 +62,7 @@ func SelectOrListContext(fzf *kubie.Fzf, installed *kubie.Installed) (SelectResu
 			return nil, err
 		}
 		if selected != "" {
-			return SelectResultSelected{Value: selected}, nil
+			return SelectResultSelected{Value: kubie.ParseContextFromSelector(selected)}, nil
 		}
 		return SelectResultCancelled{}, nil
 	} else {
