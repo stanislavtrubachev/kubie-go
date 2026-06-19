@@ -50,8 +50,23 @@ curl -fsSL https://raw.githubusercontent.com/stanislavtrubachev/kubie-go/main/un
 
 ### Homebrew (macOS)
 
+If you have original `kubie` package installed, remove it before proceeding:
 ```sh
-brew install stanislavtrubachev/kubie-go
+brew uninstall kubie
+```
+
+Then install:
+```sh
+brew tap stanislavtrubachev/kubie-go
+brew install kubie-go
+```
+
+**Troubleshooting Installation Issues**
+If you encounter the error Command Line Tools are too outdated, run:
+```sh
+sudo rm -rf /Library/Developer/CommandLineTools
+xcode-select --install
+brew update
 ```
 
 ### Build from source
