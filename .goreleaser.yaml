@@ -44,7 +44,7 @@ brews:
       owner: stanislavtrubachev
       name: homebrew-kubie-go
       token: "{{ .Env.HOMEBREW_KUBIE_GO_GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
     homepage: "https://github.com/stanislavtrubachev/kubie-go"
     description: "Kubernetes context and namespace manager written in Go."
     license: MIT
