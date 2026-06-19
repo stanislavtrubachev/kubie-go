@@ -1,9 +1,5 @@
 # Kubie-go
 
-<p align="center">
-  <img src="./assets/image_mascot_400x450.png" alt="Mascot Harold" width="400"/>
-</p>
-
 [![License: Zlib](https://img.shields.io/badge/License-Zlib-lightgrey.svg)](https://opensource.org/licenses/Zlib)
 
 ## Motivation
@@ -14,6 +10,10 @@ This creates a risky workflow:
 - You open a new shell and have no idea which cluster is currently active.
 - You accidentally apply a critical manifest to `production` because you thought you were still on `dev`.
 - You find yourself running `kubectl config current-context` every few minutes just to stay safe.
+
+<p align="center">
+  <img src="./assets/image_mascot_400x450.png" alt="Mascot Harold" width="400"/>
+</p>
 
 ## Solution is Kubi-go
 
