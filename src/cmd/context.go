@@ -148,7 +148,7 @@ func Context(settings *kubie.Settings, contextName *string, namespaceName *strin
 	if contextName != nil {
 		name = *contextName
 	} else {
-		res, err := SelectOrListContext(&settings.Fzf, installed)
+		res, err := SelectOrListContext(&settings.Fzf, settings, installed)
 		if err != nil {
 			return err
 		}

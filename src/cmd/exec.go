@@ -122,7 +122,7 @@ func Exec(settings *kubie.Settings, contextName string, namespaceName string, ex
 
 	for _, contextSrc := range matching {
 		if printContext {
-			fmt.Printf("CONTEXT => %s\n", contextSrc.Item.Name)
+			fmt.Printf("CONTEXT => %s\n", kubie.ResolveAlias(settings, contextSrc.Item.Name))
 		}
 
 		kubeconfig, err := installed.MakeKubeconfigForContext(contextSrc.Item.Name, &namespaceName)

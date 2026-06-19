@@ -16,7 +16,7 @@ func DeleteContext(settings *kubie.Settings, contextName *string) error {
 	if contextName != nil {
 		name = *contextName
 	} else {
-		res, err := SelectOrListContext(&settings.Fzf, installed)
+		res, err := SelectOrListContext(&settings.Fzf, settings, installed)
 		if err != nil {
 			return err
 		}

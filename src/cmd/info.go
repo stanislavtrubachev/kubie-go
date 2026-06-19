@@ -16,7 +16,8 @@ const (
 )
 
 type KubieInfo struct {
-	Kind KubieInfoKind
+	Kind     KubieInfoKind
+	Settings *kubie.Settings
 }
 
 // Info outputs information depending on the type
@@ -31,7 +32,7 @@ func Info(info KubieInfo) error {
 			return err
 		}
 		if conf.CurrentContext != nil {
-			fmt.Println(*conf.CurrentContext)
+			fmt.Println(kubie.ResolveAlias(info.Settings, *conf.CurrentContext))
 		} else {
 			fmt.Println("")
 		}

@@ -71,7 +71,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "info: unknown kind: %s\n", args[0])
 			os.Exit(1)
 		}
-		err = cmd.Info(cmd.KubieInfo{Kind: kind})
+		err = cmd.Info(cmd.KubieInfo{Kind: kind, Settings: &settings})
 
 	case "exec":
 		fs := flag.NewFlagSet("exec", flag.ExitOnError)
