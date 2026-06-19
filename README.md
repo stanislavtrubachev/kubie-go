@@ -4,7 +4,7 @@
 
 ## Motivation
 
-Imagine managing multiple clusters (`dev`, `test`, and `production`). You switch between them throughout the day using kubectx or kubens. The issue? These utilities modify the global Kubernetes context for your entire system. Every terminal window you have open shares the exact same cluster view.
+Imagine managing multiple clusters (`dev`, `test`, and `production`). You switch between them throughout the day using kubectl, kubectx or kubens. The issue? These utilities modify the global Kubernetes context for your entire system. Every terminal window you have open shares the exact same cluster view.
 
 This creates a risky workflow:
 - You open a new shell and have no idea which cluster is currently active.
