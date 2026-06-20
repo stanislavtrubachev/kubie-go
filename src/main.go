@@ -4,9 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/stanislavtrubacev/kubie-go/cmd"
-	"github.com/stanislavtrubacev/kubie-go/kubielib"
+	cmd "github.com/stanislavtrubacev/kubie-go/cmd"
+	kubie "github.com/stanislavtrubacev/kubie-go/kubielib"
+	"github.com/stanislavtrubacev/kubie-go/kubielib/health"
 	"github.com/stanislavtrubacev/kubie-go/shell"
 )
 
@@ -126,6 +128,27 @@ func main() {
 		}
 		err = cmd.Export(&settings, args[0], args[1])
 
+	case "health":
+		fs := flag.NewFlagSet("health", flag.ExitOnError)
+		watch := fs.Bool("watch", false, "continuously refresh output")
+		watchShort := fs.Bool("w", false, "continuously refresh output (shorthand)")
+		interval := fs.Duration("interval", 2*time.Second, "refresh interval for --watch")
+		output := fs.String("output", "human", "output format: human|json|yaml")
+		outputShort := fs.String("o", "", "output format shorthand")
+		namespace := fs.String("namespace", "", "filter by namespace")
+		fs.Parse(args)
+
+		outFmt := health.OutputFormat(*output)
+		if *outputShort != "" {
+			outFmt = health.OutputFormat(*outputShort)
+		}
+		err = cmd.Health(&settings, cmd.HealthOptions{
+			Watch:     *watch || *watchShort,
+			Interval:  *interval,
+			Output:    outFmt,
+			Namespace: *namespace,
+		})
+
 	case "generate-completion":
 		fs := flag.NewFlagSet("generate-completion", flag.ExitOnError)
 		shellFlag := fs.String("shell", "", "shell kind: bash|zsh|fish|xonsh|nu")
@@ -165,4 +188,5 @@ func printUsage() {
 	fmt.Fprintln(os.Stderr, "  delete [NAME]")
 	fmt.Fprintln(os.Stderr, "  export CTX NS")
 	fmt.Fprintln(os.Stderr, "  generate-completion [--shell SHELL]")
+	fmt.Fprintln(os.Stderr, "  health [-w] [-o human|json|yaml] [--namespace NS] [--interval 2s]")
 }
