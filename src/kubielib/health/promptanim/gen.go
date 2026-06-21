@@ -96,13 +96,13 @@ function _kubie_build_prefix() {
     esac
     if (( _done )); then
         if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f%%F{white}|%%f%%F{blue}${__kubie_ns__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f%%F{white}❭%%f%%F{blue}${__kubie_ns__}%%f] "
         else
-            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f] dsd"
         fi
     else
         if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="[%%F{${_col}}${_sym} ${__kubie_ctx__}|${__kubie_ns__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym} ${__kubie_ctx__}❭${__kubie_ns__}%%f] "
         else
             __kubie_prefix__="[%%F{${_col}}${_sym} ${__kubie_ctx__}%%f] "
         fi
@@ -126,14 +126,17 @@ function __kubie_precmd__() {
 add-zsh-hook precmd __kubie_precmd__
 
 # zle widget: triggered by zle -F when daemon writes to FIFO.
-# Rebuilds prefix, reuses saved orig PS1, redraws prompt preserving user input.
-# Must also update __kubie_applied_prefix__ so precmd knows which prefix we set.
+# Drains ALL accumulated trigger bytes first (daemon may have written several
+# while a previous redraw was in progress) so we call zle reset-prompt only once
+# per burst. Skips redraw entirely when the user has text in $BUFFER — evaluating
+# PS1 (PROMPT_SUBST calls git_prompt_info which runs git-status) would block
+# input for 100-300 ms per call, making typing feel frozen.
 function _kubie_redraw() {
-    read -k1 -u $_kubie_fd 2>/dev/null
+    while read -k1 -u $_kubie_fd -t 0 2>/dev/null; do :; done
     _kubie_build_prefix
     PS1="${__kubie_prefix__}${__kubie_orig_ps1__}"
     __kubie_applied_prefix__="$__kubie_prefix__"
-    zle reset-prompt
+    [[ -z "$BUFFER" ]] && zle reset-prompt
 }
 zle -N _kubie_redraw
 zle -F $_kubie_fd _kubie_redraw
