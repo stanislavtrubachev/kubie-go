@@ -96,9 +96,9 @@ function _kubie_build_prefix() {
     esac
     if (( _done )); then
         if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{red}${__kubie_ctx__}%%f%%F{white}|%%f%%F{green}${__kubie_ns__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f%%F{white}|%%f%%F{blue}${__kubie_ns__}%%f] "
         else
-            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{red}${__kubie_ctx__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f] "
         fi
     else
         if [[ -n "$__kubie_ns__" ]]; then
