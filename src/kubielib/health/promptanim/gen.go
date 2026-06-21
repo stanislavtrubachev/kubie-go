@@ -1,26 +1,25 @@
 // Package promptanim generates shell startup code (Bash and Zsh) that embeds
 // an animated Braille spinner into the shell prompt (PS1).
 //
-// Zsh real-time animation uses zle -F (file-descriptor watcher):
+// Zsh strategy — prepend, don't replace:
+//
+//   - We insert a "[⠼ ctx|ns] " block at the START of the existing user PS1
+//     instead of overwriting it entirely. The user's theme (oh-my-zsh, prezto,
+//     etc.) continues to render git status, PWD, colours, etc.
+//
+// Real-time animation via zle -F:
 //
 //  1. A background daemon writes spinner state to a temp file every 150 ms
 //     and writes one byte to a FIFO to wake zle.
 //  2. zle -F registers the FIFO fd: when daemon writes, zle calls _kubie_redraw.
-//  3. _kubie_redraw consumes the trigger byte, rebuilds PS1, calls zle reset-prompt.
-//     zle reset-prompt redraws the prompt line WITHOUT losing the user's typed text.
-//  4. precmd also rebuilds PS1 on each Enter so the state is always current.
+//  3. _kubie_redraw rebuilds the prefix, prepends to saved orig PS1, calls
+//     zle reset-prompt — redraws prompt WITHOUT losing user's typed text.
+//  4. precmd (runs LAST) saves the theme's PS1 each cycle, then prepends.
 //
-// Bash has no zle equivalent — prompt updates on Enter only (PROMPT_COMMAND).
+// Static-PS1 guard: __kubie_last_ps1__ detects when PS1 hasn't been refreshed
+// by a theme precmd, so the prefix is never double-added.
 //
-// Color mapping (zsh native sequences, immune to PROMPT_SUBST):
-//
-//	bright=0  → %F{8}     (ANSI 90, dark-gray)
-//	bright=1  → %F{15}    (ANSI 97, light-gray)
-//	ok        → %F{green}
-//	warn      → %F{yellow}
-//	err       → %F{red}
-//	ctx name  → %F{red}
-//	namespace → %F{green}
+// Bash: no zle — prompt updates on Enter only (PROMPT_COMMAND).
 package promptanim
 
 import (
@@ -35,11 +34,8 @@ func shellQuote(s string) string {
 
 // ZshCode returns the zsh snippet appended to the kubie .zshrc.
 //
-// Real-time animation via zle -F: the FIFO fd is watched by zle; every 150 ms
-// the daemon writes one byte to wake zle, which calls zle reset-prompt.
-// User input is preserved — zle reset-prompt saves and restores $BUFFER.
-//
-// This snippet is the sole owner of PS1.
+// The snippet prepends an animated "[⠼ ctx|ns] " block to the existing PS1
+// so themes like oh-my-zsh or prezto continue to show git status and PWD.
 func ZshCode(ctxName, ns, spinnerFile string) string {
 	qFile := shellQuote(spinnerFile)
 	qCtx := shellQuote(ctxName)
@@ -50,6 +46,11 @@ func ZshCode(ctxName, ns, spinnerFile string) string {
 __kubie_spin_file__=%s
 __kubie_pipe__="${__kubie_spin_file__}.pipe"
 __kubie_frames__=(⠋ ⠙ ⠹ ⠸ ⠼ ⠴ ⠦ ⠧ ⠇ ⠏)
+__kubie_ctx__=%s
+__kubie_ns__=%s
+__kubie_orig_ps1__=''
+__kubie_applied_prefix__=''
+__kubie_prefix__=''
 
 # FIFO: daemon writes one byte every 150ms → zle -F wakes → _kubie_redraw runs
 mkfifo "$__kubie_pipe__"
@@ -78,14 +79,12 @@ function __kubie_daemon__() {
 __kubie_daemon__ >/dev/null 2>&1 &!
 __kubie_daemon_pid__=$!
 
-# Shared PS1 builder used by both precmd and the zle widget.
-# Uses native zsh %%F{}/%%f prompt sequences — immune to PROMPT_SUBST.
-# Spinning:    entire block in one gray shade (dark or light)
-# Final state: status-coloured ▮, ctx red, ns green
-function _kubie_build_ps1() {
+# Builds __kubie_prefix__ — the "[⠼ ctx|ns] " block only (no %%# suffix).
+# This prefix is PREPENDED to the existing user PS1, not a full replacement.
+# Uses native zsh %%F{}/%%f prompt sequences, immune to PROMPT_SUBST issues.
+function _kubie_build_prefix() {
     local s=''
     [[ -f "$__kubie_spin_file__" ]] && s=$(<"$__kubie_spin_file__")
-    local _ctx=%s _ns=%s
     local _sym _col _done=0
     case "$s" in
         ok)   _sym='▮'; _col='green';  _done=1 ;;
@@ -96,31 +95,44 @@ function _kubie_build_ps1() {
         *)    _sym='▮'; _col='8'; _done=1 ;;
     esac
     if (( _done )); then
-        if [[ -n "$_ns" ]]; then
-            PS1="%%F{${_col}}[${_sym}%%f %%F{red}${_ctx}%%f%%F{white}|%%f%%F{green}${_ns}%%f] %%# "
+        if [[ -n "$__kubie_ns__" ]]; then
+            __kubie_prefix__="%%F{${_col}}[${_sym}%%f %%F{red}${__kubie_ctx__}%%f%%F{white}|%%f%%F{green}${__kubie_ns__}%%f] "
         else
-            PS1="%%F{${_col}}[${_sym}%%f %%F{red}${_ctx}%%f] %%# "
+            __kubie_prefix__="%%F{${_col}}[${_sym}%%f %%F{red}${__kubie_ctx__}%%f] "
         fi
     else
-        if [[ -n "$_ns" ]]; then
-            PS1="%%F{${_col}}[${_sym} ${_ctx}|${_ns}%%f] %%# "
+        if [[ -n "$__kubie_ns__" ]]; then
+            __kubie_prefix__="%%F{${_col}}[${_sym} ${__kubie_ctx__}|${__kubie_ns__}%%f] "
         else
-            PS1="%%F{${_col}}[${_sym} ${_ctx}%%f] %%# "
+            __kubie_prefix__="%%F{${_col}}[${_sym} ${__kubie_ctx__}%%f] "
         fi
     fi
 }
 
-# precmd: rebuild PS1 after each command (Enter key)
+# precmd: runs LAST (add-zsh-hook appends) so theme hooks have already set PS1.
+# Compares current PS1 against the exact value we last built
+# (applied_prefix + orig). If they differ, the theme changed PS1 — save
+# the new value as the fresh orig. If they match, PS1 is ours — reuse orig.
+# This prevents double-prefix both for static PS1 users and after _kubie_redraw
+# updated PS1 between two Enter keystrokes.
 function __kubie_precmd__() {
-    _kubie_build_ps1
+    if [[ "$PS1" != "${__kubie_applied_prefix__}${__kubie_orig_ps1__}" ]]; then
+        __kubie_orig_ps1__="$PS1"
+    fi
+    _kubie_build_prefix
+    PS1="${__kubie_prefix__}${__kubie_orig_ps1__}"
+    __kubie_applied_prefix__="$__kubie_prefix__"
 }
 add-zsh-hook precmd __kubie_precmd__
 
 # zle widget: triggered by zle -F when daemon writes to FIFO.
-# Consumes the trigger byte, rebuilds PS1, redraws prompt preserving user input.
+# Rebuilds prefix, reuses saved orig PS1, redraws prompt preserving user input.
+# Must also update __kubie_applied_prefix__ so precmd knows which prefix we set.
 function _kubie_redraw() {
     read -k1 -u $_kubie_fd 2>/dev/null
-    _kubie_build_ps1
+    _kubie_build_prefix
+    PS1="${__kubie_prefix__}${__kubie_orig_ps1__}"
+    __kubie_applied_prefix__="$__kubie_prefix__"
     zle reset-prompt
 }
 zle -N _kubie_redraw

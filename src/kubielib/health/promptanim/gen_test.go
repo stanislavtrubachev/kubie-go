@@ -14,6 +14,11 @@ func TestZshCode_containsKeyParts(t *testing.T) {
 		"__kubie_daemon__",
 		"__kubie_precmd__",
 		"add-zsh-hook precmd",
+		"_kubie_build_prefix",
+		"__kubie_orig_ps1__",
+		"__kubie_applied_prefix__",
+		"zle -F",
+		"zle reset-prompt",
 		"trap",
 		"EXIT",
 		"▮",
@@ -23,6 +28,26 @@ func TestZshCode_containsKeyParts(t *testing.T) {
 		if !strings.Contains(code, want) {
 			t.Errorf("ZshCode missing %q", want)
 		}
+	}
+}
+
+func TestZshCode_prependsNotReplaces(t *testing.T) {
+	code := ZshCode("ctx", "ns", "/tmp/f")
+	// Must save the original PS1 and prepend, not assign a fixed PS1 wholesale
+	if !strings.Contains(code, "__kubie_orig_ps1__") {
+		t.Error("ZshCode must save original PS1 into __kubie_orig_ps1__")
+	}
+	if !strings.Contains(code, `PS1="${__kubie_prefix__}${__kubie_orig_ps1__}"`) {
+		t.Error("ZshCode must build PS1 as prefix+orig, not a fixed replacement")
+	}
+}
+
+func TestZshCode_staticPsGuard(t *testing.T) {
+	code := ZshCode("ctx", "ns", "/tmp/f")
+	// Guard that prevents double-prepend: precmd compares PS1 to (applied_prefix+orig)
+	// to detect whether the theme changed PS1 or we did.
+	if !strings.Contains(code, "__kubie_applied_prefix__") {
+		t.Error("ZshCode must track applied_prefix to detect theme-vs-kubie PS1 changes")
 	}
 }
 
@@ -87,15 +112,16 @@ func TestZshCode_spinFramesPresent(t *testing.T) {
 
 func TestZshCode_noSigwinch(t *testing.T) {
 	code := ZshCode("ctx", "ns", "/tmp/f")
+	// Real-time updates use zle -F fd watcher, not SIGWINCH
 	if strings.Contains(code, "SIGWINCH") || strings.Contains(code, "TRAPWINCH") {
-		t.Error("ZshCode must not use SIGWINCH/TRAPWINCH (prompt updates on Enter only)")
+		t.Error("ZshCode must not use SIGWINCH/TRAPWINCH; use zle -F instead")
 	}
 }
 
 func TestZshCode_fileFormatInDaemon(t *testing.T) {
 	code := ZshCode("ctx", "ns", "/tmp/f")
-	// Daemon writes "char:bright", hook reads it via *:0/*:1 patterns
+	// Daemon writes "char:bright", prefix builder reads it via *:0/*:1 patterns
 	if !strings.Contains(code, "*:1") || !strings.Contains(code, "*:0") {
-		t.Error("ZshCode hook must handle 'char:bright' file format")
+		t.Error("ZshCode prefix builder must handle 'char:bright' file format")
 	}
 }
