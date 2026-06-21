@@ -6,6 +6,8 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+
+	"github.com/stanislavtrubacev/kubie-go/kubielib/health/promptanim"
 )
 
 // SpawnShellZsh launches an interactive zsh shell with KUBECONFIG pre-installed and a custom prompt.
@@ -105,7 +107,10 @@ add-zsh-hook preexec __kubie_cmd_pre_exec__
 		return fmt.Errorf("failed to write rc content: %w", err)
 	}
 	
-	if !info.Settings.Prompt.Disable {
+	// When animation is active it owns PS1 completely, so skip the standard
+	// kubie prompt hook to avoid two precmd functions fighting over PS1.
+	animActive := info.SpinnerFile != "" && !info.Settings.Animation.Disable
+	if !info.Settings.Prompt.Disable && !animActive {
 		promptSection := fmt.Sprintf(`
 # Activate prompt substitution.
 setopt PROMPT_SUBST
@@ -142,6 +147,13 @@ add-zsh-hook precmd __kubie_cmd_pre_cmd__
 `, info.Prompt)
 		if _, err := writer.WriteString(promptSection); err != nil {
 			return fmt.Errorf("failed to write prompt: %w", err)
+		}
+	}
+
+	if animActive {
+		animCode := promptanim.ZshCode(info.CtxName, info.NS, info.SpinnerFile)
+		if _, err := writer.WriteString(animCode + "\n"); err != nil {
+			return fmt.Errorf("failed to write spinner code: %w", err)
 		}
 	}
 

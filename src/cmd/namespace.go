@@ -149,7 +149,7 @@ func enterNamespace(settings *kubie.Settings, session *kubie.Session, recursive 
 
 	// launch a new shell, or overwrite the config
 	if recursive {
-		return shell.SpawnShell(settings, *config, session)
+		return shell.SpawnShell(settings, *config, session, "")
 	} else {
 		configPath, err := kubie.GetKubeconfigPath()
 		if err != nil {

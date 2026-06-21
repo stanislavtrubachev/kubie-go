@@ -178,6 +178,12 @@ func DefaultHooks() Hooks {
 	return Hooks{}
 }
 
+type Animation struct {
+	Disable bool `yaml:"disable"`
+}
+
+func DefaultAnimation() Animation { return Animation{} }
+
 type Settings struct {
 	Shell         *string           `yaml:"shell"`
 	DefaultEditor *string           `yaml:"default_editor"`
@@ -187,16 +193,18 @@ type Settings struct {
 	Hooks         Hooks             `yaml:"hooks"`
 	Fzf           Fzf               `yaml:"fzf"`
 	Aliases       map[string]string `yaml:"aliases"`
+	Animation     Animation         `yaml:"animation"`
 }
 
 func DefaultSettings() Settings {
 	return Settings{
-		Configs:  DefaultConfigs(),
-		Prompt:   DefaultPrompt(),
-		Behavior: DefaultBehavior(),
-		Hooks:    DefaultHooks(),
-		Fzf:      DefaultFzf(),
-		Aliases:  map[string]string{},
+		Configs:   DefaultConfigs(),
+		Prompt:    DefaultPrompt(),
+		Behavior:  DefaultBehavior(),
+		Hooks:     DefaultHooks(),
+		Fzf:       DefaultFzf(),
+		Aliases:   map[string]string{},
+		Animation: DefaultAnimation(),
 	}
 }
 

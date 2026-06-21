@@ -49,8 +49,8 @@ func (e *EnvVars) Apply(cmd *exec.Cmd) {
 }
 
 // SpawnShell launches a new shell with the specified settings, configuration and session.
-// Defines the shell type, creates temporary files, sets environment variables and calls the appropriate startup method.
-func SpawnShell(settings *kubie.Settings, config kubie.KubeConfig, session *kubie.Session) error {
+// spinnerFile is the path to the animation state file; pass "" to disable animation.
+func SpawnShell(settings *kubie.Settings, config kubie.KubeConfig, session *kubie.Session, spinnerFile string) error {
 
 	var kind ShellKind
 	if settings.Shell != nil {
@@ -138,10 +138,23 @@ func SpawnShell(settings *kubie.Settings, config kubie.KubeConfig, session *kubi
 
 	prompt := GeneratePS1(settings, nextDepth, kind)
 
+	// Extract ctx / ns for animation header.
+	ctxName := ""
+	ns := ""
+	if len(config.Contexts) > 0 {
+		ctxName = config.Contexts[0].Name
+		if config.Contexts[0].Context.Namespace != nil {
+			ns = *config.Contexts[0].Context.Namespace
+		}
+	}
+
 	info := &ShellSpawnInfo{
-		Settings: settings,
-		EnvVars:  envVars,
-		Prompt:   prompt,
+		Settings:    settings,
+		EnvVars:     envVars,
+		Prompt:      prompt,
+		SpinnerFile: spinnerFile,
+		CtxName:     ctxName,
+		NS:          ns,
 	}
 
 	switch kind {

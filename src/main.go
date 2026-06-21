@@ -32,7 +32,11 @@ func main() {
 		fs := flag.NewFlagSet("ctx", flag.ExitOnError)
 		namespace := fs.String("n", "", "namespace to set")
 		recursive := fs.Bool("r", false, "push context onto existing kubie shell")
+		noAnim := fs.Bool("no-animation", false, "disable animated prompt spinner")
 		fs.Parse(args)
+		if *noAnim {
+			settings.Animation.Disable = true
+		}
 		var contextName *string
 		if fs.NArg() > 0 {
 			s := fs.Arg(0)
@@ -177,7 +181,7 @@ func main() {
 func printUsage() {
 	fmt.Fprintln(os.Stderr, "Usage: kubie <command> [args]")
 	fmt.Fprintln(os.Stderr, "Commands:")
-	fmt.Fprintln(os.Stderr, "  ctx [NAME] [-n NAMESPACE] [-r]")
+	fmt.Fprintln(os.Stderr, "  ctx [NAME] [-n NAMESPACE] [-r] [--no-animation]")
 	fmt.Fprintln(os.Stderr, "  ns  [NAME] [-r] [--unset]")
 	fmt.Fprintln(os.Stderr, "  info ctx|ns|depth")
 	fmt.Fprintln(os.Stderr, "  exec CTX NS [--exit-early] [--context-headers ...] [-- ARGS...]")

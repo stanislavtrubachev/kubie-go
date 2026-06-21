@@ -1,10 +1,16 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 
-	"github.com/stanislavtrubacev/kubie-go/kubielib"
+	"golang.org/x/term"
+	"gopkg.in/yaml.v3"
+
+	kubie "github.com/stanislavtrubacev/kubie-go/kubielib"
+	"github.com/stanislavtrubacev/kubie-go/kubielib/health"
 	"github.com/stanislavtrubacev/kubie-go/shell"
 )
 
@@ -105,7 +111,7 @@ func EnterContext(settings *kubie.Settings, installed kubie.Installed, contextNa
 		}
 	}
 
-	// Inside kubie-go shell and not recursive, overwriting the KUBECONFIG file or start new shell
+	// Inside kubie-go shell and not recursive: just overwrite the kubeconfig in-place.
 	if kubie.IsKubieActive() && !recursive {
 		kubeconfigPath, err := kubie.GetKubeconfigPath()
 		if err != nil {
@@ -117,10 +123,50 @@ func EnterContext(settings *kubie.Settings, installed kubie.Installed, contextNa
 		if err := session.Save(""); err != nil {
 			return err
 		}
-	} else {
-		if err := shell.SpawnShell(settings, *kubeconfig, &session); err != nil {
-			return err
+		return nil
+	}
+
+	// Spawning a new child shell: set up animated spinner in PS1.
+	// Create a temp file that the shell daemon reads every 150ms for the current
+	// spinner state. A goroutine runs QuickCheck concurrently and writes the final
+	// status ("ok"/"warn"/"err") to the file when done.
+	// Animation is disabled if: config says so, stdout is not a TTY, or TERM=dumb.
+	animEnabled := !settings.Animation.Disable &&
+		term.IsTerminal(int(os.Stdout.Fd())) &&
+		os.Getenv("TERM") != "dumb"
+
+	spinnerFile := ""
+	if animEnabled {
+		if f, err2 := os.CreateTemp("", "kubie-anim-*.txt"); err2 == nil {
+			spinnerFile = f.Name()
+			// Write an initial frame so the daemon has something to read on first tick.
+			_, _ = f.WriteString("⠋:0")
+			_ = f.Close()
+
+			if kcBytes, err2 := yaml.Marshal(kubeconfig); err2 == nil {
+				go func() {
+					ctx2, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+					defer cancel()
+					var status []byte
+					switch health.QuickCheck(ctx2, kcBytes) {
+					case health.StatusOK:
+						status = []byte("ok")
+					case health.StatusWarning:
+						status = []byte("warn")
+					default:
+						status = []byte("err")
+					}
+					_ = os.WriteFile(spinnerFile, status, 0600)
+				}()
+			}
 		}
+	}
+	if spinnerFile != "" {
+		defer os.Remove(spinnerFile)
+	}
+
+	if err := shell.SpawnShell(settings, *kubeconfig, &session, spinnerFile); err != nil {
+		return err
 	}
 
 	return nil

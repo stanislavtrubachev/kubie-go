@@ -7,12 +7,16 @@ import (
 	"os/exec"
 
 	kubie "github.com/stanislavtrubacev/kubie-go/kubielib"
+	"github.com/stanislavtrubacev/kubie-go/kubielib/health/promptanim"
 )
 
 type ShellSpawnInfo struct {
-	Settings *kubie.Settings
-	Prompt   string
-	EnvVars  EnvVars
+	Settings    *kubie.Settings
+	Prompt      string
+	EnvVars     EnvVars
+	SpinnerFile string // empty = animation disabled
+	CtxName     string
+	NS          string
 }
 
 // SpawnShellBash launches a new bash shell with the passed parameters.
@@ -68,7 +72,8 @@ trap '__kubie_cmd_pre_exec__' DEBUG
 		return fmt.Errorf("failed to write rc content: %w", err)
 	}
 
-	if !info.Settings.Prompt.Disable {
+	animActive := info.SpinnerFile != "" && !info.Settings.Animation.Disable
+	if !info.Settings.Prompt.Disable && !animActive {
 		promptLine := fmt.Sprintf(`
 KUBIE_PROMPT='%s'
 PS1="$KUBIE_PROMPT $PS1"
@@ -76,6 +81,13 @@ unset KUBIE_PROMPT
 `, info.Prompt)
 		if _, err := writer.WriteString(promptLine); err != nil {
 			return fmt.Errorf("failed to write prompt: %w", err)
+		}
+	}
+
+	if animActive {
+		animCode := promptanim.BashCode(info.CtxName, info.NS, info.SpinnerFile)
+		if _, err := writer.WriteString(animCode + "\n"); err != nil {
+			return fmt.Errorf("failed to write spinner code: %w", err)
 		}
 	}
 
