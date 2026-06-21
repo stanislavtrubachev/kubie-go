@@ -87,24 +87,24 @@ function _kubie_build_prefix() {
     [[ -f "$__kubie_spin_file__" ]] && s=$(<"$__kubie_spin_file__")
     local _sym _col _done=0
     case "$s" in
-        ok)   _sym='▮'; _col='green';  _done=1 ;;
-        warn) _sym='▮'; _col='yellow'; _done=1 ;;
-        err)  _sym='▮'; _col='red';    _done=1 ;;
+        ok)   _sym='✓'; _col='green';  _done=1 ;;
+        warn) _sym='⚠'; _col='yellow'; _done=1 ;;
+        err)  _sym='✗'; _col='red';    _done=1 ;;
         *:1)  _sym="${s%%%%:*}"; _col='15' ;;
         *:0)  _sym="${s%%%%:*}"; _col='8'  ;;
         *)    _sym='▮'; _col='8'; _done=1 ;;
     esac
     if (( _done )); then
         if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="%%F{${_col}}[${_sym}%%f %%F{red}${__kubie_ctx__}%%f%%F{white}|%%f%%F{green}${__kubie_ns__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{red}${__kubie_ctx__}%%f%%F{white}|%%f%%F{green}${__kubie_ns__}%%f] "
         else
-            __kubie_prefix__="%%F{${_col}}[${_sym}%%f %%F{red}${__kubie_ctx__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{red}${__kubie_ctx__}%%f] "
         fi
     else
         if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="%%F{${_col}}[${_sym} ${__kubie_ctx__}|${__kubie_ns__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym} ${__kubie_ctx__}|${__kubie_ns__}%%f] "
         else
-            __kubie_prefix__="%%F{${_col}}[${_sym} ${__kubie_ctx__}%%f] "
+            __kubie_prefix__="[%%F{${_col}}${_sym} ${__kubie_ctx__}%%f] "
         fi
     fi
 }
@@ -197,15 +197,15 @@ function __kubie_build_ps1__() {
     local ctx=%s ns=%s
     if (( _done )); then
         if [[ -n "$ns" ]]; then
-            PS1="\[\e[${_c}m\][${sym}\[\e[0m\] \[\e[31m\]${ctx}\[\e[0m\]\[\e[37m\]|\[\e[0m\]\[\e[32m\]${ns}\[\e[0m\]] \$ "
+            PS1="[\[\e[${_c}m\]${sym}\[\e[0m\] \[\e[31m\]${ctx}\[\e[0m\]\[\e[37m\]|\[\e[0m\]\[\e[32m\]${ns}\[\e[0m\]] \$ "
         else
-            PS1="\[\e[${_c}m\][${sym}\[\e[0m\] \[\e[31m\]${ctx}\[\e[0m\]] \$ "
+            PS1="[\[\e[${_c}m\]${sym}\[\e[0m\] \[\e[31m\]${ctx}\[\e[0m\]] \$ "
         fi
     else
         if [[ -n "$ns" ]]; then
-            PS1="\[\e[${_c}m\][${sym} ${ctx}|${ns}\[\e[0m\]] \$ "
+            PS1="[\[\e[${_c}m\]${sym} ${ctx}|${ns}\[\e[0m\]] \$ "
         else
-            PS1="\[\e[${_c}m\][${sym} ${ctx}\[\e[0m\]] \$ "
+            PS1="[\[\e[${_c}m\]${sym} ${ctx}\[\e[0m\]] \$ "
         fi
     fi
 }
