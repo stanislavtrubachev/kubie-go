@@ -57,13 +57,17 @@ mkfifo "$__kubie_pipe__"
 exec {_kubie_fd}<>"$__kubie_pipe__"
 
 # Background daemon: updates spinner file and writes one byte to FIFO per frame.
-# Stops when Go writes "ok"/"warn"/"err" to the spinner file (sends final byte).
+# Stops when Go writes "ok"/"warn"/"err" AND at least 30 frames (3 rotations) have run.
 function __kubie_daemon__() {
-    local idx=0
+    local idx=0 total=0 final_status=''
     while [[ -f "$__kubie_spin_file__" ]]; do
         local s
         s=$(<"$__kubie_spin_file__") 2>/dev/null
-        if [[ "$s" == ok || "$s" == warn || "$s" == err ]]; then
+        case "$s" in
+            ok|warn|err) [[ -z "$final_status" ]] && final_status="$s" ;;
+        esac
+        if [[ -n "$final_status" ]] && (( total >= 30 )); then
+            printf '%%s' "$final_status" > "$__kubie_spin_file__"
             printf 'x' >&$_kubie_fd
             return 0
         fi
@@ -72,6 +76,7 @@ function __kubie_daemon__() {
         printf '%%s:%%d' "$char" "$bright" > "$__kubie_spin_file__"
         printf 'x' >&$_kubie_fd
         idx=$(( (idx + 1) %% 10 ))
+        total=$(( total + 1 ))
         sleep 0.15
     done
 }

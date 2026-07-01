@@ -26,9 +26,9 @@ const (
 var spinnerFrames = []string{"⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"}
 
 const (
-	frameInterval  = 150 * time.Millisecond
-	blinkEvery     = 2  // toggle brightness every N frames (~300ms)
-	pollTimeoutMs  = 20 // ms; governs how quickly the input goroutine reacts to shutdown
+	frameInterval = 150 * time.Millisecond
+	blinkEvery    = 2  // toggle brightness every N frames (~300ms)
+	pollTimeoutMs = 20 // ms; governs how quickly the input goroutine reacts to shutdown
 )
 
 // SpinnerStatus is the outcome of the work function passed to Run.
@@ -74,7 +74,7 @@ func Run(ctxName, ns string, workFn func() SpinnerStatus) {
 		capMu    sync.Mutex
 		captured []rune
 	)
-	ctrlCCh    := make(chan struct{}, 1)
+	ctrlCCh := make(chan struct{}, 1)
 	inputEvent := make(chan struct{}, 32) // buffered: immediate redraw on keystroke
 
 	if rawErr == nil {
@@ -141,7 +141,7 @@ func Run(ctxName, ns string, workFn func() SpinnerStatus) {
 		cleanupOnce.Do(func() {
 			if rawErr == nil {
 				close(done)
-				goroutineWg.Wait() // at most ~pollTimeoutMs ms
+				goroutineWg.Wait()              // at most ~pollTimeoutMs ms
 				term.Restore(stdinFd, rawState) //nolint:errcheck
 			}
 		})
