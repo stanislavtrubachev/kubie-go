@@ -72,8 +72,7 @@ function __kubie_daemon__() {
             return 0
         fi
         local char="${__kubie_frames__[$((idx+1))]}"
-        local bright=$(( (idx / 2) %% 2 ))
-        printf '%%s:%%d' "$char" "$bright" > "$__kubie_spin_file__"
+        printf '%%s:%%d' "$char" "$total" > "$__kubie_spin_file__"
         printf 'x' >&$_kubie_fd
         idx=$(( (idx + 1) %% 10 ))
         total=$(( total + 1 ))
@@ -90,13 +89,12 @@ __kubie_daemon_pid__=$!
 function _kubie_build_prefix() {
     local s=''
     [[ -f "$__kubie_spin_file__" ]] && s=$(<"$__kubie_spin_file__")
-    local _sym _col _text_col _done=0
+    local _sym _col _fidx=0 _done=0
     case "$s" in
         ok)   _sym='✓'; _col='green';  _done=1 ;;
         warn) _sym='⚠'; _col='yellow'; _done=1 ;;
         err)  _sym='✗'; _col='red';    _done=1 ;;
-        *:1)  _sym="${s%%%%:*}"; _text_col='15' ;;
-        *:0)  _sym="${s%%%%:*}"; _text_col='8'  ;;
+        *:*)  _sym="${s%%%%:*}"; _fidx="${s##*:}" ;;
         *)    _sym='▮'; _col='8'; _done=1 ;;
     esac
     if (( _done )); then
@@ -106,11 +104,19 @@ function _kubie_build_prefix() {
             __kubie_prefix__="[%%F{${_col}}${_sym}%%f %%F{green}${__kubie_ctx__}%%f] "
         fi
     else
-        if [[ -n "$__kubie_ns__" ]]; then
-            __kubie_prefix__="[%%F{6}${_sym}%%f %%F{${_text_col}}${__kubie_ctx__}❭${__kubie_ns__}%%f] "
-        else
-            __kubie_prefix__="[%%F{6}${_sym}%%f %%F{${_text_col}}${__kubie_ctx__}%%f] "
-        fi
+        local _text="${__kubie_ctx__}"
+        [[ -n "$__kubie_ns__" ]] && _text+="❭${__kubie_ns__}"
+        local _len=${#_text} _wave='' i
+        local _pos=$(( _fidx %% _len ))
+        for (( i=0; i<_len; i++ )); do
+            local _ch="${_text:$i:1}"
+            if (( i == _pos || i == (_pos + 1) %% _len )); then
+                _wave+="%%F{15}${_ch}%%f"
+            else
+                _wave+="%%F{8}${_ch}%%f"
+            fi
+        done
+        __kubie_prefix__="[%%F{6}${_sym}%%f ${_wave}] "
     fi
 }
 
